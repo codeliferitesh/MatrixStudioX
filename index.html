@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matrix Studio X</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Inter',sans-serif;
+}
+
+body{
+min-height:100vh;
+display:flex;
+flex-direction:column;
+background:linear-gradient(-45deg,#0f0c29,#1f1c2c,#302b63,#24243e);
+background-size:400% 400%;
+animation:bgMove 12s ease infinite;
+color:white;
+}
+
+@keyframes bgMove{
+0%{background-position:0% 50%;}
+50%{background-position:100% 50%;}
+100%{background-position:0% 50%;}
+}
+
+/* LOADER */
+#loader{
+position:fixed;
+inset:0;
+background:#000;
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:1000;
+animation:fadeOut 1s ease forwards;
+animation-delay:3s;
+}
+
+#loader h1{
+text-align:center;
+animation:pulse 1.5s infinite;
+}
+
+@keyframes pulse{
+0%,100%{opacity:0.5;}
+50%{opacity:1;}
+}
+
+@keyframes fadeOut{
+to{opacity:0;visibility:hidden;}
+}
+
+/* MAIN */
+main{
+flex:1;
+display:flex;
+justify-content:center;
+align-items:center;
+padding:20px;
+}
+
+.screen{
+width:100%;
+max-width:1000px;
+padding:40px 30px;
+border-radius:25px;
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(20px);
+box-shadow:0 0 40px rgba(0,0,0,0.6);
+display:none;
+flex-direction:column;
+align-items:center;
+text-align:center;
+animation:fadeIn 0.5s ease;
+}
+
+.screen.active{
+display:flex;
+}
+
+@keyframes fadeIn{
+from{opacity:0;transform:translateY(20px);}
+to{opacity:1;transform:translateY(0);}
+}
+
+h1{
+margin-bottom:25px;
+}
+
+select{
+padding:12px 20px;
+border-radius:12px;
+border:none;
+background:#111;
+color:white;
+font-weight:600;
+margin-bottom:20px;
+width:200px;
+text-align:center;
+}
+
+/* BUTTONS */
+button{
+padding:12px 20px;
+margin:8px;
+border:none;
+border-radius:12px;
+cursor:pointer;
+font-weight:600;
+color:white;
+background:linear-gradient(135deg,#7f00ff,#e100ff);
+transition:0.3s;
+min-width:140px;
+}
+
+button:hover{
+transform:translateY(-3px);
+box-shadow:0 8px 25px rgba(225,0,255,0.6);
+}
+
+.actions{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+margin-top:20px;
+}
+
+/* MATRICES */
+.matrix-wrapper{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:40px;
+margin-top:20px;
+}
+
+.matrix{
+display:grid;
+gap:8px;
+}
+
+input{
+width:60px;
+height:45px;
+border-radius:10px;
+border:none;
+background:#111;
+color:white;
+text-align:center;
+font-weight:600;
+}
+
+input:focus{
+outline:none;
+box-shadow:0 0 12px #e100ff;
+}
+
+.result{
+margin-top:25px;
+padding:20px;
+width:100%;
+max-width:600px;
+background:rgba(0,0,0,0.5);
+border-radius:15px;
+font-weight:600;
+}
+
+/* FOOTER */
+footer{
+text-align:center;
+padding:15px;
+background:rgba(0,0,0,0.4);
+font-size:14px;
+}
+
+/* CONFETTI */
+.confetti{
+position:fixed;
+width:8px;
+height:8px;
+background:red;
+top:-10px;
+animation:fall 1.5s linear forwards;
+z-index:999;
+}
+
+@keyframes fall{
+to{
+transform:translateY(100vh) rotate(720deg);
+opacity:0;
+}
+}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+
+.screen{
+padding:25px 15px;
+}
+
+.matrix-wrapper{
+gap:20px;
+}
+
+input{
+width:45px;
+height:40px;
+}
+
+button{
+min-width:120px;
+padding:10px 15px;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="loader">
+<h1>Welcome to Matrix Studio X<br>by Ritesh Verma</h1>
+</div>
+
+<main>
+
+<div id="selectionScreen" class="screen active">
+<h1>Select Matrix Type</h1>
+<select id="matrixSize">
+<option value="2">2 x 2 Matrix</option>
+<option value="3">3 x 3 Matrix</option>
+<option value="4">4 x 4 Matrix</option>
+</select>
+<button onclick="enterWorkspace()">Enter Workspace</button>
+</div>
+
+<div id="workspaceScreen" class="screen">
+<h1>Matrix Workspace</h1>
+
+<div class="matrix-wrapper" id="matrices"></div>
+
+<div class="actions">
+<button onclick="handleClick('add')">Add</button>
+<button onclick="handleClick('subtract')">Subtract</button>
+<button onclick="handleClick('multiply')">Multiply</button>
+<button onclick="handleClick('detA')">Det A</button>
+<button onclick="handleClick('detB')">Det B</button>
+<button onclick="randomFill()">Random</button>
+<button onclick="clearAll()">Clear</button>
+<button onclick="goBack()">Change Size</button>
+</div>
+
+<div id="result" class="result"></div>
+
+</div>
+
+</main>
+
+<footer>
+Made with ❤️ by Ritesh Verma
+</footer>
+
+<script>
+
+let size=2;
+
+function enterWorkspace(){
+triggerConfetti();
+size=parseInt(document.getElementById("matrixSize").value);
+document.getElementById("selectionScreen").classList.remove("active");
+document.getElementById("workspaceScreen").classList.add("active");
+createMatrices();
+}
+
+function goBack(){
+triggerConfetti();
+document.getElementById("workspaceScreen").classList.remove("active");
+document.getElementById("selectionScreen").classList.add("active");
+}
+
+function createMatrices(){
+const container=document.getElementById("matrices");
+container.innerHTML="";
+["A","B"].forEach(name=>{
+const div=document.createElement("div");
+div.innerHTML="<h3>Matrix "+name+"</h3>";
+div.style.textAlign="center";
+const grid=document.createElement("div");
+grid.className="matrix";
+grid.style.gridTemplateColumns=`repeat(${size},1fr)`;
+for(let i=0;i<size*size;i++){
+const input=document.createElement("input");
+input.type="number";
+input.value=0;
+input.id=name+i;
+grid.appendChild(input);
+}
+div.appendChild(grid);
+container.appendChild(div);
+});
+}
+
+function handleClick(type){
+triggerConfetti();
+calculate(type);
+}
+
+function getMatrix(name){
+let m=[];
+for(let i=0;i<size;i++){
+m[i]=[];
+for(let j=0;j<size;j++){
+m[i][j]=parseFloat(document.getElementById(name+(i*size+j)).value)||0;
+}
+}
+return m;
+}
+
+function calculate(type){
+const A=getMatrix("A");
+const B=getMatrix("B");
+let res;
+
+if(type==="add")
+res=A.map((r,i)=>r.map((v,j)=>v+B[i][j]));
+
+if(type==="subtract")
+res=A.map((r,i)=>r.map((v,j)=>v-B[i][j]));
+
+if(type==="multiply"){
+res=Array(size).fill().map(()=>Array(size).fill(0));
+for(let i=0;i<size;i++)
+for(let j=0;j<size;j++)
+for(let k=0;k<size;k++)
+res[i][j]+=A[i][k]*B[k][j];
+}
+
+if(type==="detA") res=det(A);
+if(type==="detB") res=det(B);
+
+showResult(res);
+}
+
+function det(M){
+if(size===2)
+return M[0][0]*M[1][1]-M[0][1]*M[1][0];
+
+if(size===3)
+return M[0][0]*(M[1][1]*M[2][2]-M[1][2]*M[2][1])
+-M[0][1]*(M[1][0]*M[2][2]-M[1][2]*M[2][0])
++M[0][2]*(M[1][0]*M[2][1]-M[1][1]*M[2][0]);
+
+if(size===4){
+let total=0;
+for(let col=0;col<4;col++){
+let sub=[];
+for(let i=1;i<4;i++){
+let row=[];
+for(let j=0;j<4;j++)
+if(j!==col) row.push(M[i][j]);
+sub.push(row);
+}
+total+=((col%2===0?1:-1)*M[0][col]*det3(sub));
+}
+return total;
+}
+}
+
+function det3(M){
+return M[0][0]*(M[1][1]*M[2][2]-M[1][2]*M[2][1])
+-M[0][1]*(M[1][0]*M[2][2]-M[1][2]*M[2][0])
++M[0][2]*(M[1][0]*M[2][1]-M[1][1]*M[2][0]);
+}
+
+function showResult(res){
+const result=document.getElementById("result");
+if(Array.isArray(res))
+result.innerHTML=res.map(r=>r.join("   ")).join("<br>");
+else
+result.innerHTML="Result: "+res;
+}
+
+function randomFill(){
+triggerConfetti();
+["A","B"].forEach(name=>{
+for(let i=0;i<size*size;i++)
+document.getElementById(name+i).value=Math.floor(Math.random()*9);
+});
+}
+
+function clearAll(){
+triggerConfetti();
+["A","B"].forEach(name=>{
+for(let i=0;i<size*size;i++)
+document.getElementById(name+i).value=0;
+});
+document.getElementById("result").innerHTML="";
+}
+
+/* CONFETTI EFFECT */
+function triggerConfetti(){
+for(let i=0;i<25;i++){
+let conf=document.createElement("div");
+conf.className="confetti";
+conf.style.left=Math.random()*100+"vw";
+conf.style.background=`hsl(${Math.random()*360},100%,50%)`;
+conf.style.animationDuration=(Math.random()*1+1)+"s";
+document.body.appendChild(conf);
+setTimeout(()=>conf.remove(),1500);
+}
+}
+
+</script>
+
+</body>
+</html>
